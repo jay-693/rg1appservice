@@ -1,32 +1,55 @@
-using Microsoft.AspNetCore.Mvc;
-using rg1appservice.Models;
-using System.Diagnostics;
-
 namespace rg1appservice.Controllers
 {
-    public class HomeController : Controller
+    using Microsoft.ApplicationInsights;
+    using Microsoft.AspNetCore.Mvc;
+    using System;
+    using System.Collections.Generic;
+
+    namespace CustomTelemetryApp.Controllers
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        public class HomeController : Controller
         {
-            _logger = logger;
-        }
+            private readonly TelemetryClient _telemetryClient;
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+            public HomeController(TelemetryClient telemetryClient)
+            {
+                _telemetryClient = telemetryClient;
+            }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+            public IActionResult Index()
+            {
+                // Log a custom event
+                _telemetryClient.TrackEvent("HomePageLoaded");
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+                // Log a custom metric
+                _telemetryClient.GetMetric("Traffic count").TrackValue(123);
+
+                // Log custom trace
+                _telemetryClient.TrackTrace("HomeController.Index accessed");
+
+                return View();
+            }
+
+            public IActionResult Error()
+            {
+                try
+                {
+                    throw new Exception("Sample exception");
+                }
+                catch (Exception ex)
+                {
+                    // Capture exception telemetry with custom properties
+                    var properties = new Dictionary<string, string>
+                {
+                    { "Controller", "Home" },
+                    { "Action", "Error" }
+                };
+
+                    _telemetryClient.TrackException(ex, properties);
+
+                    return View("Error");
+                }
+            }
         }
     }
 }

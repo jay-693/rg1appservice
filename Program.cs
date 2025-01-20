@@ -2,7 +2,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddApplicationInsightsTelemetry();
 
+// Add logging
+builder.Logging.AddApplicationInsights(); 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
